@@ -1,55 +1,57 @@
-//
-//  ContentView.swift
-//  RecipeBook
-//
-//  Created by Антон Николаев on 04.12.2024.
-//
-
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    @Query(sort: \Recipe.name, order: .forward) private var recipes: [Recipe]
+    
     var body: some View {
         NavigationSplitView {
             List {
-                ForEach(items) { item in
+                ForEach(recipes) { recipe in
                     NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
+                        RecipeDetailView(recipe: recipe)
                     } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
+                        HStack {
+                            if let imageData = recipe.image, let image = UIImage(data: imageData) {
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 50, height: 50)
+                            }
+                            Text(recipe.name)
+                        }
                     }
                 }
-                .onDelete(perform: deleteItems)
+                .onDelete(perform: deleteRecipes)
             }
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     EditButton()
                 }
                 ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                    NavigationLink(destination: EditRecipeView()) {
+                        Label("Edit Recipe", systemImage: "plus")
                     }
+                    
                 }
             }
         } detail: {
-            Text("Select an item")
+            Text("Select a recipe")
         }
     }
-
-    private func addItem() {
+    
+    private func addRecipe() {
         withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
+            let newRecipe = Recipe(name: "", recipeDescription: "", ingredients: [], type: "", image: nil)
+            modelContext.insert(newRecipe)
         }
     }
-
-    private func deleteItems(offsets: IndexSet) {
+    
+    private func deleteRecipes(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
-                modelContext.delete(items[index])
+                modelContext.delete(recipes[index])
             }
         }
     }
@@ -57,5 +59,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: Recipe.self, inMemory: true)
 }

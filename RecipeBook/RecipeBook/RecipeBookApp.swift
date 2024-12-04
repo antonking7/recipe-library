@@ -1,10 +1,3 @@
-//
-//  RecipeBookApp.swift
-//  RecipeBook
-//
-//  Created by Антон Николаев on 04.12.2024.
-//
-
 import SwiftUI
 import SwiftData
 
@@ -12,7 +5,7 @@ import SwiftData
 struct RecipeBookApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Recipe.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
