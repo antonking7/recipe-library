@@ -12,6 +12,8 @@ struct EditRecipeView: View {
     @State private var newImage: UIImage?
     @State private var showImagePicker: Bool = false
     
+    @State private var showAlert = false
+    
     var body: some View {
         GeometryReader { geometry in
             ScrollView {
@@ -46,21 +48,26 @@ struct EditRecipeView: View {
                     
                     VStack(alignment: newIngredients.isEmpty ? .center : .leading) {
                         Text("Ингредиенты")
-                            .font(.headline)
+                            .padding(.horizontal)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(maxWidth: geometry.size.width - 40, alignment: .center)
+                            
                         
                         if newIngredients.isEmpty {
                             Button(action: addIngredient) {
                                 Label("Добавить Ингредиент", systemImage: "plus")
                                     .padding()
-                                    .background(Color.green)
+                                    .background(Color.blue)
                                     .foregroundColor(.white)
                                     .cornerRadius(8)
                             }
+                            .padding()
                             .frame(maxWidth: geometry.size.width - 40, alignment: .center) // Выравнивание по центру с отступом
                         } else {
                             ForEach(newIngredients.indices, id: \.self) { index in
                                 HStack {
                                     TextField("Ингредиент", text: $newIngredients[index])
+                                        .padding()
                                         .textFieldStyle(.roundedBorder)
                                     
                                     Button(action: {
@@ -69,6 +76,7 @@ struct EditRecipeView: View {
                                         Image(systemName: "minus.circle")
                                             .foregroundColor(.red)
                                     }
+                                    .padding()
                                 }
                                 .padding(.horizontal)
                             }
@@ -100,12 +108,12 @@ struct EditRecipeView: View {
                             .cornerRadius(8)
                     }
                     .frame(maxWidth: geometry.size.width - 40, alignment: .center) // Выравнивание по центру с отступом
+                    .alert("названия и описание должны быть заполнены", isPresented: $showAlert) {
+                        Button("OK") { }
+                    }
                 }
                 .padding()
             }
-        }
-        .onAppear {
-            newIngredients.append("") // Добавляем пустой ингредиент при запуске
         }
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(image: $newImage, showImagePicker: $showImagePicker)
@@ -117,8 +125,10 @@ struct EditRecipeView: View {
     }
     
     private func saveNewRecipe() {
+        showAlert = false
         guard !newName.isEmpty && !newDescription.isEmpty else {
             // Обработка ошибок: названия и описание должны быть заполнены
+            showAlert = true
             return
         }
         
