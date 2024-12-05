@@ -31,13 +31,13 @@ struct ContentView: View {
                 }
                 ToolbarItem {
                     NavigationLink(destination: EditRecipeView()) {
-                        Label("Edit Recipe", systemImage: "plus")
+                        Label("Добавить Рецепт", systemImage: "plus")
                     }
                     
                 }
             }
         } detail: {
-            Text("Select a recipe")
+            Text("Выберите рецепт")
         }
     }
     

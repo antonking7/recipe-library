@@ -18,11 +18,13 @@ struct RecipeDetailView: View {
                 .font(.largeTitle)
                 .bold()
             
-            Text(recipe.recipeDescription)
-                .font(.body)
+            ScrollView {
+                Text(recipe.recipeDescription)
+                    .font(.body)
+            }
             
             VStack(alignment: .leading) {
-                Text("Ingredients")
+                Text("Ингредиенты")
                     .font(.headline)
                 
                 ForEach((recipe.ingredients ?? []).indices, id: \.self) { index in
@@ -30,7 +32,7 @@ struct RecipeDetailView: View {
                 }
             }
             
-            Text("Type: \(recipe.type)")
+            Text("Тип: \(recipe.type)")
                 .font(.headline)
             
         }
