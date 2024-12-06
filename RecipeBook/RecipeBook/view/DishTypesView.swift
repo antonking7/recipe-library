@@ -5,15 +5,13 @@ struct DishTypesView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \DishType.name, order: .forward) private var dishTypes: [DishType]
     
-    @State private var newName: String = ""
-    @State private var newImage: UIImage?
-    @State private var showImagePicker: Bool = false
-    
+    @State private var isAddingNewDishType: Bool = false
+
     var body: some View {
-        GeometryReader { geometry in
-            ScrollView {
-                VStack(alignment: .leading, spacing: 20) {
-                    ForEach(dishTypes) { dishType in
+        NavigationView {
+            List {
+                ForEach(dishTypes) { dishType in
+                    NavigationLink(destination: ContentView(selectedDishType: dishType.name)) {
                         HStack {
                             if let imageData = dishType.image, let image = UIImage(data: imageData) {
                                 Image(uiImage: image)
@@ -23,74 +21,40 @@ struct DishTypesView: View {
                             }
                             Text(dishType.name)
                             Spacer()
-                            Button(action: { deleteDishType(dishType) }) {
-                                Image(systemName: "trash")
-                                    .foregroundColor(.red)
-                            }
                         }
                     }
-                    
-                    if let image = newImage {
-                        Image(uiImage: image)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(height: 200)
-                            .cornerRadius(10)
-                            .padding(.horizontal)
-                    } else {
-                        Button(action: { showImagePicker = true }) {
-                            Label("Выбрать Изображение", systemImage: "photo")
-                                .padding()
-                                .background(Color.blue)
-                                .foregroundColor(.white)
-                                .cornerRadius(8)
-                        }
-                        .frame(maxWidth: geometry.size.width - 40, alignment: .center) // Выравнивание по центру с отступом
-                    }
-                    
-                    TextField("Название", text: $newName)
-                        .textFieldStyle(.roundedBorder)
-                        .padding(.horizontal)
-                        .autocapitalization(.words)
-                    
-                    Button(action: addDishType) {
-                        Text("Добавить Тип Блюда")
-                            .padding()
-                            .background(Color.blue)
-                            .foregroundColor(.white)
-                            .cornerRadius(8)
-                    }
-                    .frame(maxWidth: geometry.size.width - 40, alignment: .center) // Выравнивание по центру с отступом
                 }
-                .padding()
+                .onDelete(perform: deleteDishType)
+            }
+            .navigationTitle("Типы Блюд")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    EditButton()
+                }
+                ToolbarItem {
+                    Button(action: { isAddingNewDishType.toggle() }) {
+                        Label("Добавить Тип", systemImage: "plus")
+                    }
+                }
             }
         }
-        .sheet(isPresented: $showImagePicker) {
-            ImagePicker(image: $newImage, showImagePicker: $showImagePicker)
+        .sheet(isPresented: $isAddingNewDishType) {
+            AddDishTypeView(isPresented: $isAddingNewDishType)
         }
     }
-    
-    private func addDishType() {
-        guard !newName.isEmpty else { return } // Ensure name is not empty
-        
-        let newDishType = DishType(
-            name: newName,
-            image: newImage?.pngData()
-        )
-        
-        modelContext.insert(newDishType)
-        do {
-            try modelContext.save()
-            newName = ""
-            newImage = nil
-        } catch {
-            print("Не удалось сохранить тип блюда: \(error)")
-        }
-    }
-    
-    private func deleteDishType(_ dishType: DishType) {
+
+    private func deleteDishType(_ offsets: IndexSet) {
         withAnimation {
-            modelContext.delete(dishType)
+            for index in offsets {
+                let dishType = dishTypes[index]
+                modelContext.delete(dishType)
+            }
         }
+    }
+}
+
+struct DishTypesView_Previews: PreviewProvider {
+    static var previews: some View {
+        DishTypesView()
     }
 }

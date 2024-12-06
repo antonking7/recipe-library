@@ -6,6 +6,7 @@ struct RecipeBookApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Recipe.self,
+            DishType.self, // Include the new model in the schema
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -18,7 +19,10 @@ struct RecipeBookApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            NavigationView {
+                DishTypesView()
+                    .navigationTitle("Типы Блюд")
+            }
         }
         .modelContainer(sharedModelContainer)
     }

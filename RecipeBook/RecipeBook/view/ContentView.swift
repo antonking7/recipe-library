@@ -5,10 +5,12 @@ struct ContentView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \Recipe.name, order: .forward) private var recipes: [Recipe]
     
+    let selectedDishType: String
+    
     var body: some View {
         NavigationSplitView {
             List {
-                ForEach(recipes) { recipe in
+                ForEach(recipes.filter { $0.type == selectedDishType }) { recipe in
                     NavigationLink {
                         RecipeDetailView(recipe: recipe)
                     } label: {
@@ -41,13 +43,6 @@ struct ContentView: View {
         }
     }
     
-    private func addRecipe() {
-        withAnimation {
-            let newRecipe = Recipe(name: "", recipeDescription: "", ingredients: [], type: "", image: nil)
-            modelContext.insert(newRecipe)
-        }
-    }
-    
     private func deleteRecipes(offsets: IndexSet) {
         withAnimation {
             for index in offsets {
@@ -55,9 +50,4 @@ struct ContentView: View {
             }
         }
     }
-}
-
-#Preview {
-    ContentView()
-        .modelContainer(for: Recipe.self, inMemory: true)
 }

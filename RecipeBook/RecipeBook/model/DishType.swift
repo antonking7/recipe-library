@@ -1,3 +1,11 @@
+//
+//  DishType.swift
+//  RecipeBook
+//
+//  Created by Антон Николаев on 05.12.2024.
+//
+
+
 import Foundation
 import SwiftData
 
