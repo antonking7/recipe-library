@@ -5,10 +5,12 @@ struct EditRecipeView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.presentationMode) private var presentationMode
     
+    @Query(sort: \DishType.name, order: .forward) private var dishTypes: [DishType]
+    
     @State private var newName: String = ""
     @State private var newDescription: String = ""
     @State private var newIngredients: [String] = []
-    @State private var newType: String = "Салат"
+    @State private var newTypeId: UUID? // Используем UUID для выбора типа блюда
     @State private var newImage: UIImage?
     @State private var showImagePicker: Bool = false
     
@@ -49,9 +51,6 @@ struct EditRecipeView: View {
                     VStack(alignment: newIngredients.isEmpty ? .center : .leading) {
                         Text("Ингредиенты")
                             .padding(.horizontal)
-                            .textFieldStyle(.roundedBorder)
-                            .frame(maxWidth: geometry.size.width - 40, alignment: .center)
-                            
                         
                         if newIngredients.isEmpty {
                             Button(action: addIngredient) {
@@ -84,35 +83,41 @@ struct EditRecipeView: View {
                             Button(action: addIngredient) {
                                 Label("Добавить Ингредиент", systemImage: "plus")
                                     .padding()
-                                    .background(Color.green)
+                                    .background(Color.blue)
                                     .foregroundColor(.white)
                                     .cornerRadius(8)
                             }
-                            .frame(maxWidth: geometry.size.width - 40, alignment: .center) // Выравнивание по центру с отступом
+                            .padding()
                         }
                     }
                     
-                    Picker("Тип", selection: $newType) {
-                        Text("Салат").tag("Салат")
-                        Text("Основное Блюдо").tag("Основное Блюдо")
-                        Text("Десерт").tag("Десерт")
+                    Picker(selection: $newTypeId, label: Text("Тип блюда")) {
+                        ForEach(dishTypes) { dishType in
+                            Text(dishType.name).tag(dishType.id as UUID?)
+                        }
                     }
-                    .pickerStyle(.segmented)
+                    .pickerStyle(MenuPickerStyle())
                     .padding(.horizontal)
                     
-                    Button(action: saveNewRecipe) {
+                    Button(action: saveRecipe) {
                         Text("Сохранить Рецепт")
                             .padding()
-                            .background(Color.blue)
+                            .background(Color.green)
                             .foregroundColor(.white)
                             .cornerRadius(8)
                     }
-                    .frame(maxWidth: geometry.size.width - 40, alignment: .center) // Выравнивание по центру с отступом
-                    .alert("названия и описание должны быть заполнены", isPresented: $showAlert) {
-                        Button("OK") { }
+                    .frame(maxWidth: geometry.size.width - 40, alignment: .center)
+                    .disabled(newName.isEmpty || newDescription.isEmpty || newTypeId == nil)
+                    
+                    Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                        Text("Отмена")
+                            .padding()
+                            .background(Color.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
                     }
+                    .frame(maxWidth: geometry.size.width - 40, alignment: .center)
                 }
-                .padding()
             }
         }
         .sheet(isPresented: $showImagePicker) {
@@ -124,30 +129,29 @@ struct EditRecipeView: View {
         newIngredients.append("")
     }
     
-    private func saveNewRecipe() {
-        showAlert = false
-        guard !newName.isEmpty && !newDescription.isEmpty else {
-            // Обработка ошибок: названия и описание должны быть заполнены
+    private func saveRecipe() {
+        guard !newName.isEmpty, !newDescription.isEmpty, let dishTypeId = newTypeId else {
             showAlert = true
             return
         }
         
-        let newRecipe = Recipe(
-            name: newName,
-            recipeDescription: newDescription,
-            ingredients: newIngredients.filter { !$0.isEmpty },
-            type: newType,
-            image: newImage?.pngData()
-        )
-        
-        modelContext.insert(newRecipe)
-        do {
-            try modelContext.save()
-            presentationMode.wrappedValue.dismiss() // Возвращаемся назад после сохранения
-        } catch {
-            print("Не удалось сохранить рецепт: \(error)")
+        // Найти объект DishType по UUID
+        if let selectedDishType = dishTypes.first(where: { $0.id == dishTypeId }) {
+            let newRecipe = Recipe(
+                name: newName,
+                recipeDescription: newDescription,
+                ingredients: newIngredients,
+                type: selectedDishType.name, // Или используйте другой идентификатор
+                image: newImage?.pngData()
+            )
+            
+            modelContext.insert(newRecipe)
+            do {
+                try modelContext.save()
+                presentationMode.wrappedValue.dismiss()
+            } catch {
+                print("Не удалось сохранить рецепт: \(error)")
+            }
         }
     }
 }
-
-  
