@@ -8,7 +8,6 @@ struct DishTypesView: View {
     @State private var isAddingNewDishType: Bool = false
 
     var body: some View {
-        NavigationView {
             List {
                 ForEach(dishTypes) { dishType in
                     NavigationLink(destination: ContentView(selectedDishType: dishType.name)) {
@@ -37,9 +36,8 @@ struct DishTypesView: View {
                     }
                 }
             }
-        }
         .sheet(isPresented: $isAddingNewDishType) {
-            AddDishTypeView(isPresented: $isAddingNewDishType)
+            AddDishTypeView(isPresented: $isAddingNewDishType) .navigationTitle("Добавление нового типа блюда")
         }
     }
 

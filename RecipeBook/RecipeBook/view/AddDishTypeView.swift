@@ -5,7 +5,6 @@
 //  Created by Антон Николаев on 06.12.2024.
 //
 
-
 import SwiftUI
 import SwiftData
 
@@ -16,31 +15,31 @@ struct AddDishTypeView: View {
     @State private var newName: String = ""
     @State private var newImage: UIImage?
     @State private var showImagePicker: Bool = false
+    @State private var showAlert: Bool = false // For validation alerts
 
     var body: some View {
-        NavigationView {
-            VStack(spacing: 20) {
-                TextField("Название типа блюда", text: $newName)
-                    .textFieldStyle(.roundedBorder)
-                    .padding(.horizontal)
-                
-                Button(action: { showImagePicker.toggle() }) {
-                    Text(newImage == nil ? "Выбрать изображение" : "Изменить изображение")
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(8)
+            Form {
+                Section(header: Text("Информация о типе блюда")) {
+                    TextField("Название типа блюда", text: $newName)
+                        .textFieldStyle(.roundedBorder)
+                    
+                    Button(action: { showImagePicker.toggle() }) {
+                        Text(newImage == nil ? "Выбрать изображение" : "Изменить изображение")
+                            .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    
+                    if let imageData = newImage?.pngData(), let image = UIImage(data: imageData) {
+                        Image(uiImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(height: 200)
+                    }
                 }
-                .frame(maxWidth: .infinity, alignment: .center)
-                
-                if let imageData = newImage?.pngData(), let image = UIImage(data: imageData) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(height: 200)
-                        .padding(.horizontal)
-                }
-                
+
                 Button(action: saveNewDishType) {
                     Text("Сохранить Тип")
                         .padding()
@@ -50,7 +49,7 @@ struct AddDishTypeView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
             }
-            .navigationTitle("Добавление нового типа блюда")
+            .navigationTitle("Добавить тип блюда")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Отмена") {
@@ -58,14 +57,15 @@ struct AddDishTypeView: View {
                     }
                 }
             }
-        }
         .sheet(isPresented: $showImagePicker) {
             ImagePicker(image: $newImage, showImagePicker: $showImagePicker)
         }
+        .alert("Название должно быть заполнено", isPresented: $showAlert) { Button("OK") {} }
     }
 
     private func saveNewDishType() {
         guard !newName.isEmpty else {
+            showAlert = true
             return // Handle error if needed
         }
         

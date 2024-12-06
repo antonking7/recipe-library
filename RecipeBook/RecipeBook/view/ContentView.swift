@@ -7,8 +7,10 @@ struct ContentView: View {
     
     let selectedDishType: String
     
+    // Добавляем состояние для управления отображением EditRecipeView
+    @State private var isShowingEditRecipeView: Bool = false
+
     var body: some View {
-        NavigationSplitView {
             List {
                 ForEach(recipes.filter { $0.type == selectedDishType }) { recipe in
                     NavigationLink {
@@ -32,14 +34,15 @@ struct ContentView: View {
                     EditButton()
                 }
                 ToolbarItem {
-                    NavigationLink(destination: EditRecipeView()) {
+                    Button(action: { isShowingEditRecipeView.toggle() }) {
                         Label("Добавить Рецепт", systemImage: "plus")
                     }
-                    
                 }
             }
-        } detail: {
-            Text("Выберите рецепт")
+        // Добавляем sheet для отображения EditRecipeView
+        .sheet(isPresented: $isShowingEditRecipeView) {
+            EditRecipeView()
+                .navigationTitle("Редактирование рецепта")
         }
     }
     
@@ -49,5 +52,11 @@ struct ContentView: View {
                 modelContext.delete(recipes[index])
             }
         }
+    }
+}
+
+struct ContentView_Previews: PreviewProvider {
+    static var previews: some View {
+        ContentView(selectedDishType: "Основные блюда")
     }
 }
