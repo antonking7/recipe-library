@@ -6,6 +6,7 @@ struct DishTypesView: View {
     @Query(sort: \DishType.name, order: .forward) private var dishTypes: [DishType]
     
     @State private var isAddingNewDishType: Bool = false
+    @State private var showSearchView: Bool = false
 
     var body: some View {
             List {
@@ -35,9 +36,18 @@ struct DishTypesView: View {
                         Label("Добавить Тип", systemImage: "plus")
                     }
                 }
+                ToolbarItem {
+                       Button(action: { showSearchView.toggle() }) {
+                           Image(systemName: "magnifyingglass")
+                               .foregroundColor(.blue)
+                       }
+               }
             }
-        .sheet(isPresented: $isAddingNewDishType) {
-            AddDishTypeView(isPresented: $isAddingNewDishType) .navigationTitle("Добавление нового типа блюда")
+            .sheet(isPresented: $isAddingNewDishType) {
+                AddDishTypeView(isPresented: $isAddingNewDishType) .navigationTitle("Добавление нового типа блюда")
+            }
+        .sheet(isPresented: $showSearchView) {
+                           SearchRecipesView()
         }
     }
 

@@ -1,3 +1,11 @@
+//
+//  SearchRecipesView.swift
+//  RecipeBook
+//
+//  Created by Антон Николаев on 08/12/2024.
+//
+
+
 import SwiftUI
 import SwiftData
 
@@ -7,6 +15,8 @@ struct SearchRecipesView: View {
     // State to hold the search text and filtered recipes
     @State private var searchText = ""
     @Query(sort: \Recipe.name, order: .forward) private var allRecipes: [Recipe]
+    
+    @FocusState private var isFocused: Bool
     
     // Filtered recipes based on the search text
     var filteredRecipes: [Recipe] {
@@ -31,6 +41,10 @@ struct SearchRecipesView: View {
                 TextField("Поиск рецептов", text: $searchText)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding()
+                    .focused($isFocused)  // Set the focused state to this TextField
+                    .onAppear {  // Automatically set focus when the view appears
+                        isFocused = true
+                    }
                 
                 // List of filtered recipes
                 List(filteredRecipes) { recipe in
