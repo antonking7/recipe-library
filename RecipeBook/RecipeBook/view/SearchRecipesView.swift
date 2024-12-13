@@ -5,14 +5,13 @@
 //  Created by Антон Николаев on 08/12/2024.
 //
 
-
 import SwiftUI
 import SwiftData
 
 struct SearchRecipesView: View {
     @Environment(\.modelContext) private var modelContext
     
-    // State to hold the search text and filtered recipes
+    // State to hold the search text
     @State private var searchText = ""
     @Query(sort: \Recipe.name, order: .forward) private var allRecipes: [Recipe]
     
@@ -21,7 +20,7 @@ struct SearchRecipesView: View {
     // Filtered recipes based on the search text
     var filteredRecipes: [Recipe] {
         if searchText.isEmpty {
-            return []
+            return allRecipes  // Return all recipes if the search text is empty
         } else {
             return allRecipes.filter { recipe in
                 let nameMatch = recipe.name.localizedCaseInsensitiveContains(searchText)
