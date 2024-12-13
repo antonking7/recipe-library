@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 
-
 struct RecipeDetailView: View {
     @Environment(\.modelContext) private var modelContext
     let recipe: Recipe
@@ -23,14 +22,15 @@ struct RecipeDetailView: View {
                     .bold()
                     .foregroundColor(.primary)
                 
-                if !recipe.recipeDescription.isEmpty {
+                if let ingredients = recipe.ingredients, !ingredients.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Описание рецепта")
+                        Text("                           Ингредиенты                           ")
                             .font(.headline)
                         
-                        Text(recipe.recipeDescription)
-                            .font(.body)
-                            .foregroundColor(.secondary)
+                        ForEach(ingredients.indices, id: \.self) { index in
+                            Text("- \(ingredients[index])")
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .padding()
                     .background(Color(uiColor: .systemGray6))
@@ -38,15 +38,14 @@ struct RecipeDetailView: View {
                     .shadow(radius: 8)
                 }
                 
-                if let ingredients = recipe.ingredients, !ingredients.isEmpty {
+                if !recipe.recipeDescription.isEmpty {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Ингредиенты")
+                        Text("              Описание рецепта                             ")
                             .font(.headline)
                         
-                        ForEach(ingredients.indices, id: \.self) { index in
-                            Text("- \(ingredients[index])")
-                                .foregroundColor(.secondary)
-                        }
+                        Text(recipe.recipeDescription)
+                            .font(.body)
+                            .foregroundColor(.secondary)
                     }
                     .padding()
                     .background(Color(uiColor: .systemGray6))
@@ -63,6 +62,13 @@ struct RecipeDetailView: View {
             .padding()
         }
         .background(Color(uiColor: .systemBackground))
+        .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        NavigationLink(destination: EditRecipeDetailView(recipe: recipe)) {
+                            Image(systemName: "pencil")
+                                .font(.headline)
+                        }
+                    }
+                }
     }
 }
-
