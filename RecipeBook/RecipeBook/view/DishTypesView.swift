@@ -10,6 +10,9 @@ struct DishTypesView: View {
     @State private var isFileSelectionViewPresented: Bool = false
     @State private var recipesFilePath: String = ""
     @State private var dishTypesFilePath: String = ""
+    @State private var showClearDataAlert: Bool = false
+    @State private var shouldClearData: Bool = false
+
 
 
     var body: some View {
@@ -64,13 +67,28 @@ struct DishTypesView: View {
         .sheet(isPresented: $showSearchView) {
             SearchRecipesView()
         }
-        sheet(isPresented: $isFileSelectionViewPresented) {
-                        FileSelectionView(
-                            recipesFilePath: $recipesFilePath,
-                            dishTypesFilePath: $dishTypesFilePath,
-                            onImport: importData
-                        )
-                    }
+        .sheet(isPresented: $isFileSelectionViewPresented) {
+            FileSelectionView(
+                recipesFilePath: $recipesFilePath,
+                dishTypesFilePath: $dishTypesFilePath,
+                onImport: {
+                    print("Вызывается onImport из FileSelectionView")
+                    importData()
+                }
+            )
+        }
+        .alert("Удалить старые данные?", isPresented: $showClearDataAlert) {
+            Button("Да", role: .destructive) {
+                shouldClearData = true
+                importData()
+            }
+            Button("Нет", role: .cancel) {
+                shouldClearData = false
+                importData()
+            }
+        } message: {
+            Text("Вы хотите удалить старые данные перед импортом?")
+        }
     }
 
     private func deleteDishType(_ offsets: IndexSet) {
@@ -113,27 +131,67 @@ struct DishTypesView: View {
         }
     }
     
+    private func clearData<T: PersistentModel>(ofType type: T.Type) {
+        do {
+            // Создаем дескриптор для выборки всех объектов типа T
+            let fetchDescriptor = FetchDescriptor<T>()
+            
+            // Получаем все объекты
+            let objects = try modelContext.fetch(fetchDescriptor)
+            
+            // Удаляем каждый объект
+            for object in objects {
+                modelContext.delete(object)
+            }
+            
+            // Сохраняем изменения
+            try modelContext.save()
+            print("Данные типа \(T.self) успешно удалены.")
+        } catch {
+            print("Ошибка при удалении данных типа \(T.self): \(error)")
+        }
+    }
+    
     private func importData() {
         let decoder = JSONDecoder()
 
         do {
+            // Если выбран вариант "удалить данные", сначала очищаем
+            if shouldClearData {
+                clearData(ofType: Recipe.self)
+                clearData(ofType: DishType.self)
+                print("Старые данные удалены.")
+            }
+
             // Импорт рецептов
             if !recipesFilePath.isEmpty,
                let recipesData = FileManager.default.contents(atPath: recipesFilePath) {
+                print("Файл рецептов найден")
                 let decodedRecipes = try decoder.decode([Recipe].self, from: recipesData)
                 decodedRecipes.forEach { recipe in
                     modelContext.insert(recipe)
                 }
+                print("Рецепты импортированы.")
+            } else {
+                print("Файл рецептов не найден или путь пуст")
             }
 
             // Импорт типов блюд
             if !dishTypesFilePath.isEmpty,
                let dishTypesData = FileManager.default.contents(atPath: dishTypesFilePath) {
+                print("Файл типов блюд найден")
                 let decodedDishTypes = try decoder.decode([DishType].self, from: dishTypesData)
                 decodedDishTypes.forEach { dishType in
                     modelContext.insert(dishType)
                 }
+                print("Типы блюд импортированы.")
+            } else {
+                print("Файл типов блюд не найден или путь пуст")
             }
+
+            // Сохраняем изменения
+            try modelContext.save()
+
         } catch {
             print("Ошибка импорта данных: \(error)")
         }

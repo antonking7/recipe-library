@@ -2,61 +2,41 @@
 //  DocumentPicker.swift
 //  RecipeBook
 //
-//  Created by Антон Николаев on 09/12/2024.
+//  Created by Антон Николаев on 13/12/2024.
 //
 
 
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct DocumentPicker: UIViewControllerRepresentable {
-    @Environment(\.presentationMode) var presentationMode
-    
-    var isExport: Bool
-    
+    var documentTypes: [UTType]
+    var onFileSelected: (URL) -> Void
+
     func makeUIViewController(context: Context) -> UIDocumentPickerViewController {
-        let documentTypes = ["public.json"]
-        let picker: UIDocumentPickerViewController
-        
-        if isExport {
-            picker = UIDocumentPickerViewController(forExporting: [])
-        } else {
-            picker = UIDocumentPickerViewController(documentTypes: documentTypes, in: .import)
-        }
-        
+        let picker = UIDocumentPickerViewController(forOpeningContentTypes: documentTypes)
         picker.delegate = context.coordinator
+        picker.allowsMultipleSelection = false
         return picker
     }
-    
-    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {
-        // No need to update anything here
-    }
-    
+
+    func updateUIViewController(_ uiViewController: UIDocumentPickerViewController, context: Context) {}
+
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-}
 
-extension DocumentPicker {
     class Coordinator: NSObject, UIDocumentPickerDelegate {
-        var parent: DocumentPicker
-        
+        let parent: DocumentPicker
+
         init(_ parent: DocumentPicker) {
             self.parent = parent
         }
-        
+
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
-            guard let url = urls.first else { return }
-            DocumentPicker.selectedFileURL?(url)
-            parent.presentationMode.wrappedValue.dismiss()
-        }
-        
-        func documentPickerWasCancelled(_ controller: UIDocumentPickerViewController) {
-            DocumentPicker.selectedFileURL?(nil)
-            parent.presentationMode.wrappedValue.dismiss()
+            if let selectedURL = urls.first {
+                parent.onFileSelected(selectedURL)
+            }
         }
     }
-}
-
-extension DocumentPicker {
-    static var selectedFileURL: ((URL?) -> Void)?
 }
